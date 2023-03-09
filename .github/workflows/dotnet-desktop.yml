@@ -1,0 +1,34 @@
+name: .NET
+
+on:
+  push:
+    branches: ["main"] # uwaga na gałąź
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - uses: actions/cache@v2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget
+      - name: Restore dependencies
+        working-directory: ./TestProject1 # TestProject1 to plik z testami
+        run: dotnet restore
+      - name: Build
+        working-directory: ./TestProject1
+        run: dotnet build --no-restore
+      - name: Test
+        working-directory: ./TestProject1
+        run: dotnet test --no-build --verbosity normal
